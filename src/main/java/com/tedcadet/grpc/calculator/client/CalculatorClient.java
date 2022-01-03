@@ -21,15 +21,68 @@ public class CalculatorClient {
                 .usePlaintext()
                 .build();
 
-        doSum();
+//        doSum();
 
-        doPrimeDecomposer();
+//        doPrimeDecomposer();
 
-        doAverage();
+//        doAverage();
+
+        doMax();
 
         // shutdown the client
         System.out.println("Shutting down client");
         channel.shutdown();
+    }
+
+    private void doMax() {
+        // Bi-Directionnal Streaming
+        // cre un non-blocking calculator client
+        CalculatorServiceGrpc.CalculatorServiceStub calculatorClient = CalculatorServiceGrpc.newStub(channel);
+
+        // Create a latch
+        CountDownLatch latch = new CountDownLatch(1);
+
+        // create a requestObserver
+        StreamObserver<MaxRequest> requestObserver =  calculatorClient.findMaximum(new StreamObserver<MaxResponse>() {
+            @Override
+            public void onNext(MaxResponse value) {
+                System.out.println("Le nouveau max est: " + value.getResult());
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                latch.countDown();
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("Done sending data");
+                latch.countDown();
+            }
+        });
+
+        List<Integer> numbers = Arrays.asList(1,5,3,6,2,20);
+
+        numbers.forEach(number -> {
+            // create a request
+            MaxRequest request = MaxRequest
+                    .newBuilder()
+                    .setNumber(number)
+                    .build();
+
+            requestObserver.onNext(request);
+        });
+
+        // complete the call
+        requestObserver.onCompleted();
+
+        // await
+        try {
+            latch.await(3L, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void doAverage() {

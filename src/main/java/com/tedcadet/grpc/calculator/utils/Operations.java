@@ -2,6 +2,7 @@ package com.tedcadet.grpc.calculator.utils;
 
 import java.util.List;
 
+// FUN: switch it to a Scala class
 public class Operations {
 
     public static double average(List<Integer> numbers) {

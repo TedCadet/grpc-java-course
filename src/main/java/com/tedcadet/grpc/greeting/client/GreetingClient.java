@@ -16,21 +16,85 @@ import java.util.stream.Stream;
 public class GreetingClient {
 
     ManagedChannel channel;
+    GreetServiceGrpc.GreetServiceStub greetAsyncClient;
+    GreetServiceGrpc.GreetServiceBlockingStub greetBlockingClient;
 
     public void run() {
         channel = ManagedChannelBuilder.forAddress("localhost", 50051)
                 .usePlaintext()
                 .build();
 
-        doUnaryCall();
+//        doUnaryCall();
 
-        doServerStreamingCall();
+//        doServerStreamingCall();
         
-        doClientStreamingCall();
+//        doClientStreamingCall();
+        
+        doBiDiStreamingCall();
 
         // shutdown the client
         System.out.println("Shutting down client");
         channel.shutdown();
+    }
+
+    private void doBiDiStreamingCall() {
+        System.out.println("Client Bi-Directional call / greet everyone");
+        
+        // create a new async/non-blocking client
+        greetAsyncClient = GreetServiceGrpc.newStub(channel);
+
+        // create a latch for asynchronous
+        CountDownLatch latch = new CountDownLatch(1);
+
+        // create a requestObserver
+        StreamObserver<GreetEveryoneRequest> requestObserver = greetAsyncClient.greetEveryone(new StreamObserver<GreetEveryoneResponse>() {
+            @Override
+            public void onNext(GreetEveryoneResponse value) {
+                // everytime we receive a response
+                System.out.println("response from server: " + value.getResult());
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                latch.countDown();
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("Server is done sending data");
+                latch.countDown();
+            }
+        });
+
+        // create requests
+        Arrays.asList("Edward", "Andy", "Dina").forEach(
+                name -> {
+                    System.out.println("Sending: " + name);
+                    requestObserver.onNext(
+                            GreetEveryoneRequest.newBuilder()
+                                    .setGreeting(
+                                            Greeting.newBuilder()
+                                                    .setFirstName(name)
+                                                    .build())
+                                    .build());
+
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+        );
+
+        // complete the call on the requestObserver
+        requestObserver.onCompleted();
+
+        // wait for 3 seconds that the latch get to 0
+        try {
+            latch.await(3L,TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void doClientStreamingCall() {
@@ -38,13 +102,13 @@ public class GreetingClient {
         System.out.println("Client Streaming call / Sends many requests and receive one response");
 
         // create a new async/non-blocking client
-        GreetServiceGrpc.GreetServiceStub greetClient = GreetServiceGrpc.newStub(channel);
+        greetAsyncClient = GreetServiceGrpc.newStub(channel);
 
         // create a latch for asynchronous
         CountDownLatch latch = new CountDownLatch(1);
 
         // create a requestObserver
-        StreamObserver<LongGreetRequest> requestObserver = greetClient.longGreet(new StreamObserver<LongGreetResponse>() {
+        StreamObserver<LongGreetRequest> requestObserver = greetAsyncClient.longGreet(new StreamObserver<LongGreetResponse>() {
             @Override
             public void onNext(LongGreetResponse value) {
                 // we get a response from the server
@@ -110,7 +174,7 @@ public class GreetingClient {
         System.out.println("Server streaming call / Receives many greets with one call");
 
         // create a new blocking client
-        GreetServiceGrpc.GreetServiceBlockingStub greetClient = GreetServiceGrpc.newBlockingStub(channel);
+        greetBlockingClient = GreetServiceGrpc.newBlockingStub(channel);
 
         // Server Streaming
         // create a greeting
@@ -125,7 +189,7 @@ public class GreetingClient {
                 .build();
 
         // get the responses and print them
-        greetClient.greetManyTimes(gr).forEachRemaining(response -> {
+        greetBlockingClient.greetManyTimes(gr).forEachRemaining(response -> {
             System.out.println(response.getResult());
         });
     }
@@ -135,7 +199,7 @@ public class GreetingClient {
         System.out.println("Unary Call / single greet");
 
         // create a new blocking client
-        GreetServiceGrpc.GreetServiceBlockingStub greetClient = GreetServiceGrpc.newBlockingStub(channel);
+        greetBlockingClient = GreetServiceGrpc.newBlockingStub(channel);
 
         // Unary
         // set a greeting
@@ -150,7 +214,7 @@ public class GreetingClient {
                 .build();
 
         // make the rpc call
-        GreetResponse greetResponse = greetClient.greet(greetRequest);
+        GreetResponse greetResponse = greetBlockingClient.greet(greetRequest);
         System.out.println(greetResponse.getResult());
     }
 }

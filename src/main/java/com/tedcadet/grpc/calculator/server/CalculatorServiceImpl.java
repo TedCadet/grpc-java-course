@@ -2,6 +2,7 @@ package com.tedcadet.grpc.calculator.server;
 
 import com.proto.calculator.*;
 import com.tedcadet.grpc.calculator.utils.Operations;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Arrays;
@@ -139,5 +140,34 @@ public class CalculatorServiceImpl extends CalculatorServiceGrpc.CalculatorServi
         };
 
         return requestObserver;
+    }
+
+    @Override
+    public void squareRoot(SquareRootRequest request, StreamObserver<SquareRootResponse> responseObserver) {
+
+        // get the number in the request
+        Integer number = request.getNumber();
+
+        // treat the request
+        if(number >= 0) {
+            double result = Math.sqrt(number);
+            responseObserver.onNext(
+                    SquareRootResponse.newBuilder()
+                            .setResult(result)
+                            .build()
+            );
+
+            // complete the call
+            responseObserver.onCompleted();
+        } else {
+            responseObserver.onError(
+                    Status.INVALID_ARGUMENT
+                            .withDescription("The number being sent is not positive")
+                            .augmentDescription("Number sent: " + number)
+                            .asRuntimeException()
+            );
+        }
+
+
     }
 }

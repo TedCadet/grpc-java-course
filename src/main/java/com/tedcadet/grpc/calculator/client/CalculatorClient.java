@@ -27,11 +27,33 @@ public class CalculatorClient {
 
 //        doAverage();
 
-        doMax();
+//        doMax();
+
+        doSquare();
 
         // shutdown the client
         System.out.println("Shutting down client");
         channel.shutdown();
+    }
+
+    private void doSquare() {
+        CalculatorServiceGrpc.CalculatorServiceBlockingStub calculatorClient= CalculatorServiceGrpc.newBlockingStub(channel);
+
+        Integer number = 4;
+
+        // get the result
+        try {
+            double result = calculatorClient.squareRoot(SquareRootRequest
+                    .newBuilder()
+                    .setNumber(number)
+                    .build()).getResult();
+
+            System.out.println("The square root of " + number + " is " + result);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
     private void doMax() {

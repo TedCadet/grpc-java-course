@@ -1,9 +1,7 @@
 package com.tedcadet.grpc.greeting.client;
 
-import com.proto.dummy.DummyServiceGrpc;
 import com.proto.greet.*;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import io.grpc.*;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Arrays;
@@ -30,11 +28,55 @@ public class GreetingClient {
         
 //        doClientStreamingCall();
         
-        doBiDiStreamingCall();
+//        doBiDiStreamingCall();
+
+        doDeadline();
 
         // shutdown the client
         System.out.println("Shutting down client");
         channel.shutdown();
+    }
+
+    private void doDeadline() {
+
+        greetBlockingClient = GreetServiceGrpc.newBlockingStub(channel);
+
+        System.out.println("add a 3000ms deadline to client");
+        // get response
+        try {
+            GreetWithDeadlineResponse response = greetBlockingClient.withDeadline(Deadline.after(3000, TimeUnit.MILLISECONDS))
+                    .greetWithDeadline(
+                            GreetWithDeadlineRequest.newBuilder()
+                                    .setGreeting(Greeting.newBuilder().setFirstName("Edward").build())
+                                    .build());
+
+            System.out.println(response.getResult());
+        } catch (StatusRuntimeException e) {
+            if(e.getStatus() == Status.DEADLINE_EXCEEDED) {
+                System.out.println("Deadline exceed");
+            } else {
+                e.printStackTrace();
+            }
+        }
+
+        System.out.println("add a 100ms deadline to client");
+        // get response
+        try {
+            GreetWithDeadlineResponse response = greetBlockingClient.withDeadline(Deadline.after(100, TimeUnit.MILLISECONDS))
+                    .greetWithDeadline(
+                            GreetWithDeadlineRequest.newBuilder()
+                                    .setGreeting(Greeting.newBuilder().setFirstName("Edward").build())
+                                    .build());
+
+            System.out.println(response.getResult());
+        } catch (StatusRuntimeException e) {
+            if(e.getStatus() == Status.DEADLINE_EXCEEDED) {
+                System.out.println("Deadline exceed");
+            } else {
+                e.printStackTrace();
+            }
+        }
+
     }
 
     private void doBiDiStreamingCall() {

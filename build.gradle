@@ -7,6 +7,8 @@ plugins {
 group 'com.tedcadet.grpc'
 version '1.0-SNAPSHOT'
 
+def grpcVersion = '1.43.0'
+
 repositories {
     mavenCentral()
 }
@@ -15,9 +17,10 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 
-    implementation 'io.grpc:grpc-netty-shaded:1.43.0'
-    implementation 'io.grpc:grpc-protobuf:1.43.0'
-    implementation 'io.grpc:grpc-stub:1.43.0'
+    implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+    implementation "io.grpc:grpc-stub:${grpcVersion}"
+    implementation "io.grpc:grpc-services:${grpcVersion}"
     compileOnly 'org.apache.tomcat:annotations-api:6.0.53'
 }
 
@@ -27,7 +30,7 @@ protobuf {
     }
     plugins {
         grpc {
-            artifact = 'io.grpc:protoc-gen-grpc-java:1.43.0'
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
         }
     }
     generateProtoTasks {

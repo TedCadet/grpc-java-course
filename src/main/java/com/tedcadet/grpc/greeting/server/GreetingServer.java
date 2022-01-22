@@ -3,15 +3,25 @@ package com.tedcadet.grpc.greeting.server;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 
+import java.io.File;
 import java.io.IOException;
 
 public class GreetingServer {
     public static void main(String[] args) throws IOException, InterruptedException {
 
         // cree un nouveau grpc server et ajoute un nouveau greetService
+        // plain text no security
+        /*Server server = ServerBuilder.forPort(50051)
+                .addService(new GreetServiceImpl())
+                .build();*/
+
+        // secure server
         Server server = ServerBuilder.forPort(50051)
                 .addService(new GreetServiceImpl())
-                .build();
+                        .useTransportSecurity(
+                                new File("ssl/server.crt"),
+                                new File("ssl/server.pem")
+                        ).build();
 
         // lance le server
         System.out.println("Server started");

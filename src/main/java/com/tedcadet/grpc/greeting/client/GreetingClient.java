@@ -2,8 +2,12 @@ package com.tedcadet.grpc.greeting.client;
 
 import com.proto.greet.*;
 import io.grpc.*;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
+import javax.net.ssl.SSLException;
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -17,10 +21,15 @@ public class GreetingClient {
     GreetServiceGrpc.GreetServiceStub greetAsyncClient;
     GreetServiceGrpc.GreetServiceBlockingStub greetBlockingClient;
 
-    public void run() {
-        channel = ManagedChannelBuilder.forAddress("localhost", 50051)
+    public void run() throws SSLException {
+        // non secure channel
+        /*channel = ManagedChannelBuilder.forAddress("localhost", 50051)
                 .usePlaintext()
-                .build();
+                .build();*/
+
+        // secure channel
+        channel = NettyChannelBuilder.forAddress("localhost", 50051)
+                .sslContext(GrpcSslContexts.forClient().trustManager(new File("ssl/ca.crt")).build()).build();
 
 //        doUnaryCall();
 

@@ -17,10 +17,18 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 
+    // grpc
     implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
     implementation "io.grpc:grpc-protobuf:${grpcVersion}"
     implementation "io.grpc:grpc-stub:${grpcVersion}"
     implementation "io.grpc:grpc-services:${grpcVersion}"
+
+    //mongodb
+    implementation "org.mongodb:mongodb-driver-sync:4.4.1"
+
+    // logback
+    implementation "ch.qos.logback:logback-classic:1.2.10"
+
     compileOnly 'org.apache.tomcat:annotations-api:6.0.53'
 }
 

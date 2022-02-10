@@ -19,12 +19,15 @@ public class BlogServiceImpl extends BlogServiceGrpc.BlogServiceImplBase {
     Logger logger = LoggerFactory.getLogger(BlogServiceImpl.class);
 
     // mongo configs
-    private MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
+    //TODO: externalize the credentials
+    private MongoClient mongoClient = MongoClients.create("mongodb://rootuser:rootpass@localhost:27017");
     private MongoDatabase database = mongoClient.getDatabase("blog-grpc-db");
     private MongoCollection<Document> collection = database.getCollection("blog");
 
     @Override
     public void createBlog(CreateBlogRequest request, StreamObserver<CreateBlogResponse> responseObserver) {
+
+        // login to db
 
         // get the request
         logger.info("Received a create Blog request");

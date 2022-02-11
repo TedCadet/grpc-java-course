@@ -1,9 +1,6 @@
 package com.tedcadet.grpc.blog.client;
 
-import com.proto.blog.Blog;
-import com.proto.blog.BlogServiceGrpc;
-import com.proto.blog.CreateBlogRequest;
-import com.proto.blog.CreateBlogResponse;
+import com.proto.blog.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.slf4j.Logger;
@@ -42,10 +39,10 @@ public class BlogClient {
                 .setContent("We're creating a grpc Service/Client blog!")
                 .build();
 
-        CreateBlogRequest request = CreateBlogRequest.newBuilder().setBlog(blog).build();
+        BlogRequest request = BlogRequest.newBuilder().setBlog(blog).build();
 
         // call the service
-        CreateBlogResponse response = blogClient.createBlog(request);
+        BlogResponse response = blogClient.createBlog(request);
 
         logger.info(response.getBlog().toString());
     }

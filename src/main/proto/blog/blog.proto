@@ -12,14 +12,21 @@ message Blog {
   string content = 4;
 }
 
-message CreateBlogRequest {
+message BlogRequest {
   Blog blog = 1; // the id shouldn't matter
 }
 
-message CreateBlogResponse {
+message BlogResponse {
   Blog blog = 1; // the id will correspond to the one in mongoDB
 }
 
+message ReadBlogRequest {
+  string blogId = 1;
+}
+
+
+
 service BlogService {
-  rpc CreateBlog(CreateBlogRequest) returns (CreateBlogResponse){};
+  rpc CreateBlog(BlogRequest) returns (BlogResponse){};
+  rpc ReadBlog(ReadBlogRequest) returns (BlogResponse){};
 }

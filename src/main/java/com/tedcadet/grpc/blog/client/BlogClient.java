@@ -3,6 +3,7 @@ package com.tedcadet.grpc.blog.client;
 import com.proto.blog.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,13 +19,34 @@ public class BlogClient {
                 .build();
 
         // do the jobs here
-        createBlog();
+//        createBlog();
 
-
+        readBlog();
 
         // shutdown the client
         System.out.println("Shutting down client");
         channel.shutdown();
+    }
+
+    private void readBlog() {
+
+        // create a new blocking client
+        BlogServiceGrpc.BlogServiceBlockingStub blogClient = BlogServiceGrpc.newBlockingStub(channel);
+
+        // create a request
+        ObjectId id = new ObjectId("62048a137f4e141bdeb8bf76");
+        String blogId = id.toString();
+
+        ReadBlogRequest request = ReadBlogRequest.newBuilder().setBlogId(blogId).build();
+
+        // call the service
+        logger.info("sending a readBlog request...");
+        BlogResponse response = blogClient.readBlog(request);
+
+        Blog blog = response.getBlog();
+
+        logger.info(blog.toString());
+
     }
 
     private void createBlog() {

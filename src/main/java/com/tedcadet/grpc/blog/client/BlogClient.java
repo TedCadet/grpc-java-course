@@ -21,11 +21,38 @@ public class BlogClient {
         // do the jobs here
 //        createBlog();
 
-        readBlog();
+//        readBlog();
+
+        updateBlog();
 
         // shutdown the client
         System.out.println("Shutting down client");
         channel.shutdown();
+    }
+
+    private void updateBlog() {
+
+        // create a new blocking client
+        BlogServiceGrpc.BlogServiceBlockingStub blogClient = BlogServiceGrpc.newBlockingStub(channel);
+
+        // create a request
+        ObjectId id = new ObjectId("62048a137f4e141bdeb8bf76");
+        String blogId = id.toString();
+
+        Blog blogUpdated = Blog.newBuilder()
+                .setId(blogId)
+                .setAuthorId("Edward")
+                .setTitle("Lets update a blog!")
+                .setContent("we're updating a blog. Oh yeah! Part 2")
+                .build();
+
+        BlogRequest request = BlogRequest.newBuilder().setBlog(blogUpdated).build();
+
+        // call the service
+        logger.info("calling updateBlog...");
+        BlogResponse response = blogClient.updateBlog(request);
+
+        logger.info(response.getBlog().toString());
     }
 
     private void readBlog() {
@@ -58,7 +85,7 @@ public class BlogClient {
         Blog blog = Blog.newBuilder()
                 .setAuthorId("Edward")
                 .setTitle("First Blog")
-                .setContent("We're creating a grpc Service/Client blog!")
+                .setContent("We're creating a grpc Service/Client blog! Part 2")
                 .build();
 
         BlogRequest request = BlogRequest.newBuilder().setBlog(blog).build();

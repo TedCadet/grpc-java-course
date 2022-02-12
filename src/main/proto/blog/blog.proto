@@ -29,4 +29,5 @@ message ReadBlogRequest {
 service BlogService {
   rpc CreateBlog(BlogRequest) returns (BlogResponse){};
   rpc ReadBlog(ReadBlogRequest) returns (BlogResponse){};
+  rpc UpdateBlog(BlogRequest) returns (BlogResponse){};
 }

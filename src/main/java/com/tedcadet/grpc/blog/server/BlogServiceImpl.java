@@ -4,10 +4,13 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.UpdateResult;
 import com.proto.blog.*;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,19 +73,12 @@ public class BlogServiceImpl extends BlogServiceGrpc.BlogServiceImplBase {
         String blogId = request.getBlogId();
 
         // find the blog in the db
-        Document searchResult = null;
-
         logger.info("Searching in db for the blog...");
         try {
-            searchResult = collection.find(eq("_id", new ObjectId(blogId)))
+            Document searchResult = collection.find(eq("_id", new ObjectId(blogId)))
                     .first();
 
-            Blog blogFounded = Blog.newBuilder()
-                    .setId(searchResult.getObjectId("_id").toString())
-                    .setAuthorId(searchResult.getString("author_id"))
-                    .setTitle(searchResult.getString("title"))
-                    .setContent(searchResult.getString("title"))
-                    .build();
+            Blog blogFounded = DocumentToBlog(searchResult);
 
             // create a response
             BlogResponse response = BlogResponse.newBuilder()
@@ -102,5 +98,61 @@ public class BlogServiceImpl extends BlogServiceGrpc.BlogServiceImplBase {
                             .augmentDescription(e.getLocalizedMessage())
                             .asRuntimeException());
         }
+    }
+
+    @Override
+    public void updateBlog(BlogRequest request, StreamObserver<BlogResponse> responseObserver) {
+
+        // get the request
+        logger.info("request received..");
+        Blog blogToUpdate = request.getBlog();
+
+        String blogId = blogToUpdate.getId();
+
+
+        // update the blog
+        logger.info("Searching in db for the blog...");
+        try {
+
+            logger.info("updating the blog...");
+            Bson filter = eq("_id", new ObjectId(blogId));
+
+            Bson updates = Updates.combine(
+                    Updates.set("author_id", blogToUpdate.getAuthorId()),
+                    Updates.set("title", blogToUpdate.getTitle()),
+                    Updates.set("content", blogToUpdate.getContent())
+            );
+
+            UpdateResult updateResult = collection.updateOne(filter,updates);
+            Document blogDoc = collection.find(filter).first();
+
+            // create and send the response
+            logger.info("sending the updated blog...");
+            Blog blogUpdated = DocumentToBlog(blogDoc);
+
+            BlogResponse response = BlogResponse.newBuilder().setBlog(blogUpdated).build();
+            responseObserver.onNext(response);
+
+            // close the call
+            logger.info("call done...");
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            //TODO: diversifier les differents erreur possible avec leur status code a eux
+            responseObserver.onError(
+                    Status.NOT_FOUND
+                            .withDescription("The blog with the corresponding id was not found")
+                            .augmentDescription(e.getLocalizedMessage())
+                            .asRuntimeException());
+        }
+    }
+
+    private Blog DocumentToBlog(Document doc) {
+        return Blog.newBuilder()
+                .setId(doc.getObjectId("_id").toString())
+                .setAuthorId(doc.getString("author_id"))
+                .setTitle(doc.getString("title"))
+                .setContent(doc.getString("content"))
+                .build();
     }
 }

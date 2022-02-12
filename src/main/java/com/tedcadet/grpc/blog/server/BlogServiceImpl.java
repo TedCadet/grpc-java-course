@@ -70,16 +70,12 @@ public class BlogServiceImpl extends BlogServiceGrpc.BlogServiceImplBase {
         String blogId = request.getBlogId();
 
         // find the blog in the db
-        logger.info("Searching in db for the blog...");
-        Document searchResult = collection.find(eq("_id", new ObjectId(blogId)))
-                .first();
+        Document searchResult = null;
 
-        if(searchResult == null) {
-            responseObserver.onError(
-                    Status.NOT_FOUND
-                            .withDescription("The blog with the corresponding id was not found")
-                            .asRuntimeException());
-        } else {
+        logger.info("Searching in db for the blog...");
+        try {
+            searchResult = collection.find(eq("_id", new ObjectId(blogId)))
+                    .first();
 
             Blog blogFounded = Blog.newBuilder()
                     .setId(searchResult.getObjectId("_id").toString())
@@ -98,6 +94,13 @@ public class BlogServiceImpl extends BlogServiceGrpc.BlogServiceImplBase {
 
             // close the call
             responseObserver.onCompleted();
+        } catch (Exception e) {
+            //TODO: diversifier les differrents erreur possible avec leur status code a eux
+            responseObserver.onError(
+                    Status.NOT_FOUND
+                            .withDescription("The blog with the corresponding id was not found")
+                            .augmentDescription(e.getLocalizedMessage())
+                            .asRuntimeException());
         }
     }
 }

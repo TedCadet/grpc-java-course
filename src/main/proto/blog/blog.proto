@@ -24,10 +24,18 @@ message ReadBlogRequest {
   string blogId = 1;
 }
 
+message DeleteBlogRequest {
+  string blogId = 1;
+}
+
+message DeleteBlogResponse {
+  string blogId = 1;
+}
 
 
 service BlogService {
   rpc CreateBlog(BlogRequest) returns (BlogResponse){};
-  rpc ReadBlog(ReadBlogRequest) returns (BlogResponse){};
+  rpc ReadBlog(ReadBlogRequest) returns (BlogResponse){}; // return NOT_FOUND if not found
   rpc UpdateBlog(BlogRequest) returns (BlogResponse){};
+  rpc DeleteBlog(DeleteBlogRequest) returns (DeleteBlogResponse){}; // return NOT_FOUND if not found
 }

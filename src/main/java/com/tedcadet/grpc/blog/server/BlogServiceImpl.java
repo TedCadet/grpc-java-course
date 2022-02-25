@@ -1,10 +1,12 @@
 package com.tedcadet.grpc.blog.server;
 
+import com.mongodb.MongoException;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.proto.blog.*;
 import io.grpc.Status;
@@ -147,6 +149,39 @@ public class BlogServiceImpl extends BlogServiceGrpc.BlogServiceImplBase {
         }
     }
 
+    @Override
+    public void deleteBlog(DeleteBlogRequest request, StreamObserver<DeleteBlogResponse> responseObserver) {
+
+        try {
+            // get the blogId from the request
+            logger.info("received a delete request");
+            String blogId = request.getBlogId();
+
+            // delete the blog if it exist
+            logger.info("deleting blog...");
+
+            Bson query = eq("_id", new ObjectId(blogId));
+
+            DeleteResult result = collection.deleteOne(query);
+
+            // create and send a response
+            DeleteBlogResponse response = DeleteBlogResponse.newBuilder().setBlogId(blogId).build();
+            responseObserver.onNext(response);
+
+            // close the call
+            responseObserver.onCompleted();
+
+        } catch(MongoException e) {
+            // send a status not found
+            responseObserver.onError(
+                    Status.NOT_FOUND
+                            .withDescription("Unable to delete the blog")
+                            .augmentDescription(e.getLocalizedMessage())
+                            .asRuntimeException()
+            );
+        }
+    }
+
     private Blog DocumentToBlog(Document doc) {
         return Blog.newBuilder()
                 .setId(doc.getObjectId("_id").toString())
@@ -155,4 +190,6 @@ public class BlogServiceImpl extends BlogServiceGrpc.BlogServiceImplBase {
                 .setContent(doc.getString("content"))
                 .build();
     }
+
+
 }

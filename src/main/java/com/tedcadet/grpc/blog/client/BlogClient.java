@@ -7,6 +7,8 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutionException;
+
 public class BlogClient {
 
     Logger logger = LoggerFactory.getLogger(BlogClient.class);
@@ -18,26 +20,64 @@ public class BlogClient {
                 .usePlaintext()
                 .build();
 
+        //TODO: Remplace les blockingStubs par des Stubs
+
         // do the jobs here
-//        createBlog();
+//        String authorId = "Edward";
+//        String title = "First Blog";
+//        String content = "We're creating a grpc Service/Client blog! Part 2";
+//        createBlog(authorId, title, content);
 
-//        readBlog();
+//        String id = "62048a137f4e141bdeb8bf76";
 
-        updateBlog();
+//        readBlog(id);
+
+//        updateBlog(id);
+
+//        deleteBlog(id);
 
         // shutdown the client
         System.out.println("Shutting down client");
         channel.shutdown();
     }
 
-    private void updateBlog() {
+    private void deleteBlog(String id) {
+
+        // create a Client
+        BlogServiceGrpc.BlogServiceFutureStub blogClient = BlogServiceGrpc.newFutureStub(channel);
+
+        // create a request
+        logger.info("Creating the delete request");
+
+        ObjectId objectId = new ObjectId(id);
+        String blogId = objectId.toString();
+
+        DeleteBlogRequest request = DeleteBlogRequest
+                .newBuilder()
+                .setBlogId(blogId)
+                .build();
+
+        // call the service and get the response
+        logger.info("calling the service");
+        DeleteBlogResponse response = null;
+        try {
+            response = blogClient.deleteBlog(request).get();
+            logger.info("blog deleted. id: " + response.getBlogId());
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    private void updateBlog(String id) {
 
         // create a new blocking client
         BlogServiceGrpc.BlogServiceBlockingStub blogClient = BlogServiceGrpc.newBlockingStub(channel);
 
         // create a request
-        ObjectId id = new ObjectId("62048a137f4e141bdeb8bf76");
-        String blogId = id.toString();
+        ObjectId objectId = new ObjectId(id);
+        String blogId = objectId.toString();
 
         Blog blogUpdated = Blog.newBuilder()
                 .setId(blogId)
@@ -55,14 +95,14 @@ public class BlogClient {
         logger.info(response.getBlog().toString());
     }
 
-    private void readBlog() {
+    private void readBlog(String id) {
 
         // create a new blocking client
         BlogServiceGrpc.BlogServiceBlockingStub blogClient = BlogServiceGrpc.newBlockingStub(channel);
 
         // create a request
-        ObjectId id = new ObjectId("62048a137f4e141bdeb8bf76");
-        String blogId = id.toString();
+        ObjectId objectId = new ObjectId(id);
+        String blogId = objectId.toString();
 
         ReadBlogRequest request = ReadBlogRequest.newBuilder().setBlogId(blogId).build();
 
@@ -76,16 +116,16 @@ public class BlogClient {
 
     }
 
-    private void createBlog() {
+    private void createBlog(String authorId, String title, String content) {
 
         // create a new blocking client (stub)
         BlogServiceGrpc.BlogServiceBlockingStub blogClient = BlogServiceGrpc.newBlockingStub(channel);
 
         // create a request
         Blog blog = Blog.newBuilder()
-                .setAuthorId("Edward")
-                .setTitle("First Blog")
-                .setContent("We're creating a grpc Service/Client blog! Part 2")
+                .setAuthorId(authorId)
+                .setTitle(title)
+                .setContent(content)
                 .build();
 
         BlogRequest request = BlogRequest.newBuilder().setBlog(blog).build();

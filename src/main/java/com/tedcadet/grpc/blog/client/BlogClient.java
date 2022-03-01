@@ -8,24 +8,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 
 public class BlogClient {
 
     Logger logger = LoggerFactory.getLogger(BlogClient.class);
     ManagedChannel channel;
-    
+
     public void run() {
         // cree un channel pour communiquer sur localhost:50053
-        channel = ManagedChannelBuilder.forAddress("localhost",50053)
+        channel = ManagedChannelBuilder.forAddress("localhost", 50053)
                 .usePlaintext()
                 .build();
 
         //TODO: Remplace les blockingStubs par des Stubs
 
         // do the jobs here
-//        String authorId = "Edward";
-//        String title = "First Blog";
-//        String content = "We're creating a grpc Service/Client blog! Part 2";
+        String authorId = "Edward";
+        String title = "First Blog";
+        String content = "We're creating a grpc Service/Client blog! Part 4";
 //        createBlog(authorId, title, content);
 
 //        String id = "62048a137f4e141bdeb8bf76";
@@ -36,10 +37,25 @@ public class BlogClient {
 
 //        deleteBlog(id);
 
+        listBlogs();
+
         // shutdown the client
         System.out.println("Shutting down client");
         channel.shutdown();
     }
+
+    private void listBlogs() {
+
+        // Create a Client
+        BlogServiceGrpc.BlogServiceBlockingStub blogClient = BlogServiceGrpc.newBlockingStub(channel);
+
+        // call the service, get the response and print them
+        ListBlogRequest request = ListBlogRequest.newBuilder().build();
+        blogClient.listBlog(request).forEachRemaining(printBlog);
+
+    }
+
+    private Consumer<ListBlogResponse> printBlog = blog -> logger.info("blog: " + blog);
 
     private void deleteBlog(String id) {
 

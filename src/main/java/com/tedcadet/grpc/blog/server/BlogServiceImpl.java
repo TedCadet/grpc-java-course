@@ -1,10 +1,7 @@
 package com.tedcadet.grpc.blog.server;
 
 import com.mongodb.MongoException;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.*;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
@@ -125,7 +122,7 @@ public class BlogServiceImpl extends BlogServiceGrpc.BlogServiceImplBase {
                     Updates.set("content", blogToUpdate.getContent())
             );
 
-            UpdateResult updateResult = collection.updateOne(filter,updates);
+            UpdateResult updateResult = collection.updateOne(filter, updates);
             Document blogDoc = collection.find(filter).first();
 
             // create and send the response
@@ -171,7 +168,7 @@ public class BlogServiceImpl extends BlogServiceGrpc.BlogServiceImplBase {
             // close the call
             responseObserver.onCompleted();
 
-        } catch(MongoException e) {
+        } catch (MongoException e) {
             // send a status not found
             responseObserver.onError(
                     Status.NOT_FOUND
@@ -180,6 +177,29 @@ public class BlogServiceImpl extends BlogServiceGrpc.BlogServiceImplBase {
                             .asRuntimeException()
             );
         }
+    }
+
+    @Override
+    public void listBlog(ListBlogRequest request, StreamObserver<ListBlogResponse> responseObserver) {
+        
+        MongoCursor<Document> cursor = collection.find().iterator();
+
+        try {
+            while (cursor.hasNext()) {
+                logger.info("sending a blog");
+                responseObserver.onNext(
+                        ListBlogResponse.newBuilder()
+                                .setBlog(DocumentToBlog(cursor.next()))
+                                .build());
+            }
+        } finally {
+            logger.info("closing the cursor");
+            cursor.close();
+
+            logger.info("completing the call");
+            responseObserver.onCompleted();
+        }
+
     }
 
     private Blog DocumentToBlog(Document doc) {

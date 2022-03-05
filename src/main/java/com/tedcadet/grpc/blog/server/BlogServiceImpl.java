@@ -181,7 +181,18 @@ public class BlogServiceImpl extends BlogServiceGrpc.BlogServiceImplBase {
 
     @Override
     public void listBlog(ListBlogRequest request, StreamObserver<ListBlogResponse> responseObserver) {
-        
+
+        // version from the class
+        collection.find().iterator().forEachRemaining(document -> responseObserver.onNext(
+                ListBlogResponse.newBuilder()
+                        .setBlog(DocumentToBlog(document))
+                        .build()
+        ));
+
+        responseObserver.onCompleted();
+
+        // ma version
+        /*
         MongoCursor<Document> cursor = collection.find().iterator();
 
         try {
@@ -199,7 +210,7 @@ public class BlogServiceImpl extends BlogServiceGrpc.BlogServiceImplBase {
             logger.info("completing the call");
             responseObserver.onCompleted();
         }
-
+        */
     }
 
     private Blog DocumentToBlog(Document doc) {
